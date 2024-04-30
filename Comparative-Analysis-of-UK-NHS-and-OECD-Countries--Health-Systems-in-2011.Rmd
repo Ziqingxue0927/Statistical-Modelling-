@@ -1,0 +1,199 @@
+---
+title: "Comparative Analysis of UK NHS and OECD Countries' Health Systems in 2011"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+date: "May 2, 2024"
+header-includes:
+  - \usepackage{amssymb}
+---
+
+
+
+```{r echo=FALSE}
+library(MASS)
+load("MAS2010.RData")
+attach(who)
+
+
+
+```
+#  Background
+In 2011, the UK Government initiated a significant reorganization of the National Health Service, aimed at improving outcomes and efficiency by decentralising budget control.However,some critiques of prior healthcare provision highlighted poorer survival rates for several major diseases compared to other OECD countries, prompting debates on the effectiveness of health expenditure.In this report, we analyse data from the World Health Organization (WHO) to identify variables that are associated with life expectancy and to determine their influence on our appropriately constructed model.The result shows that UK health care system had a rather good performance comparing to other OECD countries, refuting the Andrew Lansley's claim.
+
+#  Results
+
+The parameters for our model are defined as follows:
+
+- $y_i$: Life expectancy of citizens at birth,in years.
+- $x_i$: Total expenditure per person on health.
+- $z_i$: Percentage of tobacco use among adults.
+- $m_i$: The alcohol consumption among adults.
+- $k_i$: The percentage of adults classified as obese.
+
+To learn about the possible relationships,the dependent variable $y_i$ is individually plotted against each independent variable in four scatter plots.
+
+```{r echo=FALSE, fig.show='hold', out.width='50%'}
+plot(tobacco,life,xlab = "Tobacco consumption",ylab = "Life expectancy")
+plot(expenditure,life,xlab = "Expenditure",ylab = "Life expectancy")
+plot(alcohol,life,xlab = "Alcohol consumption",ylab = "Life expectancy")
+plot(obesity,life,xlab = "Obesity rates",ylab = "Life expectancy")
+
+
+
+```
+Upon reviewing the plots, the expenditure has a much larger range of values than tobacco consumption, alcohol consumption, and obesity rate. It suggests that expenditure disproportionately influences the model. The logarithmic transformation is needed to apply to moderate the range of expenditure values, ensuring that the relationship is not disproportionately influenced by larger values and aligning it more closely with the scales of the other variables.
+
+```{r echo=FALSE, fig.show='hold', out.width='50%'}
+
+plot(log(expenditure), life)
+
+
+
+```
+
+In addition, the correlation coefficient between life expectancy and expenditure is 0.51, indicating a moderate positive correlation. After applying a logarithmic transformation to the data, the fit becomes more linear, and the correlation coefficient increases to 0.67, suggesting a strong correlation.Besides this, the correlation coefficients between life expectancy and tobacco consumption, alcohol consumption, and obesity rates are -0.34, -0.36, and -0.3, respectively, all indicating weak negative correlations.
+
+```{r echo=FALSE}
+library(MASS)
+lmf <- lm(life ~ log(expenditure) + tobacco + alcohol + obesity)
+evals <- stdres(lmf)
+par(mfrow = c(1, 2))
+hist(evals)
+qqnorm(evals)
+abline(0, 1)
+
+
+```
+
+From the result above, the full model is defined as:
+
+$$ M_f : y_i = \beta_0 + \beta_x \log(x_i) + \beta_z z_i + \beta_m m_i + \beta_k k_i + \epsilon_i, \text{ where } \epsilon_i \sim N(0, \sigma^2) $$
+To validate the assumption, a Kolmogorov-Smirnov (K-S) test is applied to check whether the residuals of the full model are normally distributed. The resulting p-value of 0.511 indicates that there is no evidence to reject the null hypothesis of normality, suggesting that our model is appropriate with i.i.d. variances.
+
+Now，all the models nested within \(M_f\) as follow：
+
+$$
+\begin{aligned}
+& M_0 : y_i = \beta_0 + \epsilon_i \\
+& M_1 : y_i = \beta_0 + \beta_z z_i + \beta_m m_i + \beta_k k_i + \epsilon_i \\
+& M_2 : y_i = \beta_0 + \beta_x \log(x_i) + \beta_m m_i + \beta_k k_i + \epsilon_i \\
+& M_3 : y_i = \beta_0 + \beta_x \log(x_i) + \beta_k k_i + \epsilon_i \\
+& M_4 : y_i = \beta_0 + \beta_x \log(x_i) + \beta_m m_i + \epsilon_i \\
+&
+\end{aligned}
+$$
+where $\epsilon_i \sim N(0, \sigma^2)$.
+
+To determine which model best fits the data,  one-way ANOVA tests is needed to be applied.
+
+Firstly, we apply the test to model \(M_0\), which assumes no relationship between life expectancy and any of the parameters, and to the full model \(M_f\). The resulting p-value is \(2.3 \times 10^{-5}\), providing strong evidence to reject the null hypothesis \(H_0\) in favour of the full model.Similarly,we use the same method to compare \(M_1\), which assumes there is no relationship between the life expectancy and the expenditure, with \(M_f\), yielding a p-value of 0.0001061, which strongly suggests that the full model \(M_f\) cannot be reduced to \(M_1\).
+
+Comparing \(M_2\), which assumes no relationship between tobacco consumption and life expectancy, with \(M_f\), the p-value is 0.3238. This suggests there is strong evidence to support that tobacco consumption has no significant effect on the model, which can be reduced.Thus, \(M_2\) can be considered as a good reduced model.
+
+Finally, \(M_2\) is compared with \(M_3\) (assuming there is no relationship among life expectancy, alcohol consumption, and tobacco consumption) and \(M_4\) (assuming there is no relationship among life expectancy, obesity rate, and tobacco consumption), both of which are further simplified from \(M_2\). The p-values given by the output are 0.007788 and 0.04133, suggesting there is no evidence to reject the null hypotheses, thereby preventing further reduction of the model simplified from \(M_2\).Thus \(M_2\) is the most suitable model. When the model is summarized, the adjusted R-squared is 0.6146, suggesting that \(M_2\) accounts for about 60 percent of the variance in the data.
+
+Within all above, the estimated life expectancy is 78.8962 years.
+
+# Conclusion
+
+The average life expectancy in OECD countries is 79.48 years, while in the UK, it is 78.8962 years, which is slightly above the OECD average.It suggests the UK Health Care System had a rather good performance comparing with other OECD members,which is not enough evidence to support Andrew Lansley's claim.
+
+
+
+
+
+
+
+
+
+#  R Commands
+
+```{r message=FALSE, warning=FALSE}
+library(MASS)
+load("MAS2010.RData")
+attach(who)
+
+```
+
+
+```{r echo=TRUE, fig.show='hide', out.width='50%'}
+# Scatter plots of life expectancy against each independent variable.
+
+plot(tobacco,life,xlab = "Tobacco consumption",ylab = "Life expectancy")
+plot(expenditure,life,xlab = "Expenditure",ylab = "Life expectancy")
+plot(alcohol,life,xlab = "Alcohol consumption",ylab = "Life expectancy")
+plot(obesity,life,xlab = "Obesity rates",ylab = "Life expectancy")
+plot(log(expenditure), life,xlab = "Log(Expenditure)",ylab = "Life expectancy")
+
+```
+
+```{r fig.show='hide', echo=TRUE}
+# Correlations between 'life' and other variables
+cor(expenditure, life)
+cor(tobacco, life)
+cor(alcohol, life)
+cor(obesity, life)
+cor(log(expenditure), life)
+```
+
+
+```{r fig.show='hide', echo=TRUE}
+# The histogram and Q-Q plot, and K—S test
+lmf <- lm(life ~ log(expenditure) + tobacco + alcohol + obesity)
+evals <- stdres(lmf)
+par(mfrow = c(1, 2))
+hist(evals)
+qqnorm(evals)
+abline(0, 1)
+ks.test(evals, pnorm, 0, 1)
+```
+
+
+
+```{r fig.show='hide', echo=TRUE}
+# Linear models and One-Way ANOVA Tests
+lmf <- lm(life ~ log(expenditure) + tobacco + alcohol + obesity)
+lm0 <- lm(life ~ 1)
+lm1 <- lm(life ~ tobacco + alcohol + obesity)
+lm2 <- lm(life ~ log(expenditure) + alcohol + obesity)
+lm3 <- lm(life ~ log(expenditure) + obesity)
+lm4 <- lm(life ~ log(expenditure) + alcohol)   
+
+
+```
+
+```{r fig.show='hide', echo=TRUE}
+anova(lmf, lm0)
+anova(lmf, lm1)
+anova(lmf, lm2)
+anova(lm2, lm3)
+anova(lm2, lm4)
+```
+
+```{r fig.show='hide', echo=TRUE}
+summary(lm2)
+```
+
+```{r fig.show='hide', echo=TRUE}
+#  UK Life Expectancy 
+uk_values <- who[who$country == "United Kingdom",]
+predictions.PI <- data.frame(predict.lm(lm2,uk_values,
+interval = "prediction",
+level = 0.95))
+predictions.PI
+```
+
+```{r fig.show='hide', echo=TRUE}
+#  All OCED Countries Life Expectancy
+lm2 <- lm(life ~ log(expenditure) + alcohol + obesity)
+predictions.PI <- predict(lm2, newdata = who, interval = "prediction", level = 0.95)
+predictions.PI <- data.frame(predictions.PI)
+predictions.PI
+
+
+average_predicted_life <- mean(predictions.PI$fit, na.rm = TRUE)
+
+
+list(Predictions = predictions.PI, Average_Predicted_Life = average_predicted_life)
+```
